@@ -52,6 +52,23 @@ export default function KeepHero() {
         <KeepLogoAnimation
           onAnimationComplete={() => setCtaReady(true)}
         />
+        <svg
+          className={`keep-tagline${ctaReady ? " is-visible" : ""}`}
+          viewBox="0 0 681 88"
+          role="img"
+          aria-label="MOVING FORWARD"
+          preserveAspectRatio="none"
+        >
+          <text
+            x="0"
+            y="76"
+            textLength="681"
+            lengthAdjust="spacingAndGlyphs"
+            fill="#0b3041"
+          >
+            MOVING FORWARD
+          </text>
+        </svg>
         <div className="keep-cta-wrap">
           <a ref={buttonRef} className={`keep-cta${ctaReady ? " is-visible" : ""}`} href="#team">Meet the team</a>
         </div>

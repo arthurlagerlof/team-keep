@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
+import gsap from "gsap";
 import KeepHero from "./KeepHero.jsx";
 import VelocityDivider from "./VelocityDivider.jsx";
 
@@ -77,29 +78,66 @@ function ContactButton({ item, value }) {
 }
 
 function MemberCard({ member }) {
+  const [expanded, setExpanded] = useState(false);
+  const detailsRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (!expanded || !detailsRef.current) return;
+    const animation = gsap.fromTo(
+      detailsRef.current,
+      { height: 0, opacity: 0, y: -14, scale: 0.98, transformOrigin: "top center" },
+      { height: "auto", opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out", clearProps: "height,transform" }
+    );
+    return () => animation.kill();
+  }, [expanded]);
+
+  const toggleDetails = () => {
+    if (!expanded) {
+      setExpanded(true);
+      return;
+    }
+    gsap.to(detailsRef.current, {
+      height: 0,
+      opacity: 0,
+      y: -10,
+      duration: 0.35,
+      ease: "power2.in",
+      onComplete: () => setExpanded(false),
+    });
+  };
+
   return (
-    <article className="member-card">
-      <div className="member-image-wrap">
-        <img
-          className="member-image"
-          src={member.image}
-          alt={`Portrait of ${member.name}`}
-          loading="lazy"
-        />
-      </div>
+    <article className={`member-card${expanded ? " is-expanded" : ""}`}>
       <div className="member-info">
-        <div className="member-heading">
-          <h2>{member.name}</h2>
+        <div className="member-card-summary">
+          <div className="member-heading">
+            <h2>{member.name}</h2>
+          </div>
+          <div className="contact-list" aria-label={`Contact ${member.name}`}>
+            {contactItems.map((item) => (
+              <ContactButton key={item.key} item={item} value={member[item.key]} />
+            ))}
+          </div>
+          <button
+            className="member-toggle"
+            type="button"
+            aria-label={`${expanded ? "Collapse" : "Expand"} details for ${member.name}`}
+            aria-expanded={expanded}
+            onClick={toggleDetails}
+          >
+            <span aria-hidden="true" />
+          </button>
         </div>
-        <p className="member-description">{member.description}</p>
-        <div className="contact-list" aria-label={`Contact ${member.name}`}>
-          {contactItems.map((item) => (
-            <ContactButton
-              key={item.key}
-              item={item}
-              value={member[item.key]}
+        <div className="member-details" ref={detailsRef}>
+          <div className="member-image-wrap">
+            <img
+              className="member-image"
+              src={member.image}
+              alt={`Portrait of ${member.name}`}
+              loading="lazy"
             />
-          ))}
+          </div>
+          <p className="member-description">{member.description}</p>
         </div>
       </div>
     </article>

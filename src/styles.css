@@ -79,6 +79,25 @@ a:focus-visible {
   z-index: 10001;
 }
 
+.keep-tagline {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+  overflow: visible;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 700ms ease, visibility 700ms ease;
+  font-family: Aharoni, "Arial Black", Arial, sans-serif;
+  font-size: 88px;
+  font-weight: 900;
+}
+
+.keep-tagline.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
 .keep-cta-wrap {
   position: relative;
   z-index: 1;
@@ -243,6 +262,57 @@ a:focus-visible {
   padding: clamp(18px, 2.2vw, 29px);
 }
 
+.member-info,
+.member-card-summary,
+.member-details {
+  display: contents;
+}
+
+.member-image-wrap {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+}
+
+.member-heading,
+.member-description,
+.member-card-summary .contact-list {
+  grid-column: 2;
+}
+
+.member-heading {
+  grid-row: 1;
+}
+
+.member-description {
+  grid-row: 2;
+}
+
+.member-card-summary .contact-list {
+  grid-row: 3;
+}
+
+.member-heading {
+  width: 100%;
+  margin: 0;
+  padding: 28px 28px 0;
+}
+
+.member-description {
+  width: 100%;
+  margin: 0;
+  padding: 16px 28px;
+}
+
+.member-card-summary .contact-list {
+  width: 100%;
+  margin: 0;
+  padding: 16px 28px 28px;
+}
+
+.member-toggle {
+  display: none;
+}
+
 .member-heading h2 {
   margin: 0;
   color: var(--deep-navy);
@@ -319,6 +389,26 @@ a:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .member-image-wrap {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .member-heading {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .member-description {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .member-card-summary .contact-list {
+    grid-column: 1;
+    grid-row: 4;
+  }
+
   .member-image-wrap,
   .member-image {
     min-height: 260px;
@@ -326,7 +416,37 @@ a:focus-visible {
   }
 
   .member-info {
-    min-height: 220px;
+    display: flex;
+    min-height: 0;
+    padding: 24px;
+  }
+
+  .member-image-wrap {
+    width: 100%;
+    order: -1;
+  }
+
+  .member-heading,
+  .member-description,
+  .member-card-summary .contact-list {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .member-heading {
+    order: 0;
+    padding-top: 8px;
+  }
+
+  .member-description {
+    order: 1;
+    margin-top: 14px;
+    margin-bottom: 22px;
+  }
+
+  .member-card-summary .contact-list {
+    order: 2;
   }
 }
 
@@ -350,7 +470,80 @@ a:focus-visible {
   }
 
   .member-card {
-    grid-template-columns: minmax(120px, 0.8fr) 1fr;
+    grid-template-columns: 1fr;
+  }
+
+  .member-info {
+    display: flex;
+    width: 100%;
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .member-card-summary {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .member-heading {
+    flex: 1;
+  }
+
+  .member-card-summary .contact-list {
+    order: 1;
+    width: auto;
+    flex: 0 1 auto;
+    margin-top: 0;
+  }
+
+  .member-card-summary .member-heading {
+    order: 0;
+  }
+
+  .member-card-summary .member-toggle {
+    order: 0;
+  }
+
+  .member-toggle {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--navy);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .member-toggle span {
+    display: block;
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform 300ms ease;
+  }
+
+  .member-card.is-expanded .member-toggle span {
+    transform: translateY(2px) rotate(225deg);
+  }
+
+  .member-details {
+    display: none;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .member-card.is-expanded .member-details {
+    display: block;
+    padding-top: 16px;
   }
 
   .member-image-wrap,
@@ -360,8 +553,8 @@ a:focus-visible {
   }
 
   .member-info {
-    min-height: 235px;
-    padding: 18px;
+    min-height: 0;
+    padding: 16px;
   }
 
   .member-heading h2 {

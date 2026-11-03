@@ -218,7 +218,7 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
           bounds.left + Math.random() * bounds.width,
           bounds.top + Math.random() * bounds.height
         );
-        ambientTimer = gsap.delayedCall(3.2 + Math.random() * 1.8, startAmbient);
+        ambientTimer = gsap.delayedCall(2, startAmbient);
       };
 
       onPointerMove = (event) => {
