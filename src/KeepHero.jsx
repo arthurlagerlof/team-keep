@@ -14,7 +14,7 @@ export default function KeepHero() {
     gsap.set(button, { boxShadow: "0px 0px 0px rgba(11, 48, 65, 0)" });
     const fall = { time: 0 };
     const fallDuration = 0.2;
-    const startScale = 1.12;
+    const startScale = 1.04;
     timeline
       .to(button, { scale: startScale, duration: 0.08, ease: "power2.out" })
       .to(fall, {
@@ -23,7 +23,7 @@ export default function KeepHero() {
         ease: "none",
         onUpdate: () => {
           const fallProgress = fall.time / fallDuration;
-          gsap.set(button, { scale: startScale - 0.22 * fallProgress ** 2 });
+          gsap.set(button, { scale: startScale - 0.08 * fallProgress ** 2 });
         },
       })
       .to(button, {
