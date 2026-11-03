@@ -1,5 +1,6 @@
 import React from "react";
 import KeepHero from "./KeepHero.jsx";
+import VelocityDivider from "./VelocityDivider.jsx";
 
 const members = [
   {
@@ -115,6 +116,7 @@ export default function App() {
         </section>
 
         <section className="team-section" id="team" aria-labelledby="team-title">
+          <VelocityDivider />
           <h2 className="visually-hidden" id="team-title">Team KEEP members</h2>
           <div className="team-grid">
             {members.map((member) => (
