@@ -1,4 +1,5 @@
 import React from "react";
+import KeepHero from "./KeepHero.jsx";
 
 const members = [
   {
@@ -107,18 +108,10 @@ function MemberCard({ member }) {
 export default function App() {
   return (
     <div className="site-shell">
-      <header className="site-header">
-        <a className="header-brand" href="#top">
-          TEAM KEEP
-        </a>
-        <a className="header-link" href="#team">
-          Team
-        </a>
-      </header>
-
       <main>
         <section className="intro-section" id="top" aria-labelledby="hero-title">
-          <h1 id="hero-title">KEEP</h1>
+          <h1 className="visually-hidden" id="hero-title">Team KEEP</h1>
+          <KeepHero />
         </section>
 
         <section className="team-section" id="team" aria-labelledby="team-title">
