@@ -1,5 +1,4 @@
 :root {
-  color-scheme: light;
   font-family: Aharoni, "Arial Black", Arial, sans-serif;
   color: #0b3041;
   background: #ffffff;
@@ -49,12 +48,6 @@ a:focus-visible {
 
 .site-shell {
   overflow: clip;
-}
-
-.intro-section,
-.team-section,
-.team-transition-divider {
-  color-scheme: only light;
 }
 
 .intro-section {

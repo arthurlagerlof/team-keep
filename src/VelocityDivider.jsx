@@ -11,46 +11,46 @@ const RECOVERY_DURATION = 0.85;
 
 export default function VelocityDivider() {
   const teamRef = useRef(null);
-  const whitePathRef = useRef(null);
-  const bluePathRef = useRef(null);
-  const svgRef = useRef(null);
-  const widthRef = useRef(100);
+  const canvasRef = useRef(null);
   const bendRef = useRef({ value: 0 });
 
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
-    const whitePath = whitePathRef.current;
-    const bluePath = bluePathRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
     const team = teamRef.current.closest(".team-section");
-    const intro = document.querySelector(".intro-section");
     const bend = bendRef.current;
     let idleReset;
     let recoveryTween;
 
-    const syncColors = () => {
-      if (!intro || !team) return;
-      whitePath.style.fill = getComputedStyle(intro).backgroundColor;
-      bluePath.style.fill = getComputedStyle(team).backgroundColor;
-    };
-
-    const renderPath = () => {
-      const width = widthRef.current;
-      const curve = `M 0 0 Q ${width / 2} ${bend.value} ${width} 0`;
-      whitePath.setAttribute("d", `${curve} L ${width} -140 L 0 -140 Z`);
-      bluePath.setAttribute("d", `${curve} L ${width} 140 L 0 140 Z`);
+    const renderCanvas = () => {
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const scale = window.devicePixelRatio || 1;
+      context.setTransform(scale, 0, 0, scale, 0, 0);
+      context.clearRect(0, 0, width, height);
+      context.fillStyle = "#156082";
+      context.beginPath();
+      context.moveTo(0, height / 2);
+      context.quadraticCurveTo(width / 2, height / 2 + bend.value, width, height / 2);
+      context.lineTo(width, height);
+      context.lineTo(0, height);
+      context.closePath();
+      context.fill();
     };
 
     const setBend = gsap.quickTo(bend, "value", {
       duration: RESPONSE_DURATION,
       ease: "power3.out",
-      onUpdate: renderPath,
+      onUpdate: renderCanvas,
     });
 
     const resize = () => {
-      widthRef.current = window.innerWidth;
-      svgRef.current.setAttribute("viewBox", `0 -140 ${widthRef.current} 280`);
-      renderPath();
+      const scale = window.devicePixelRatio || 1;
+      canvas.width = Math.round(canvas.clientWidth * scale);
+      canvas.height = Math.round(canvas.clientHeight * scale);
+      renderCanvas();
     };
 
     const trigger = ScrollTrigger.create({
@@ -75,36 +75,17 @@ export default function VelocityDivider() {
             value: 0,
             duration: RECOVERY_DURATION,
             ease: "power3.out",
-            onUpdate: renderPath,
+            onUpdate: renderCanvas,
           });
         });
       },
     });
 
     resize();
-    syncColors();
-    const mountedColorSync = requestAnimationFrame(syncColors);
     window.addEventListener("resize", resize);
-    window.addEventListener("resize", syncColors);
-
-    const colorObserver = new MutationObserver(syncColors);
-    const observeColorChanges = (element) => {
-      colorObserver.observe(element, { attributes: true, attributeFilter: ["class", "style"] });
-    };
-    observeColorChanges(intro);
-    observeColorChanges(team);
-    observeColorChanges(document.documentElement);
-    observeColorChanges(document.body);
-
-    const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
-    colorScheme.addEventListener("change", syncColors);
 
     return () => {
-      cancelAnimationFrame(mountedColorSync);
-      colorObserver.disconnect();
-      colorScheme.removeEventListener("change", syncColors);
       window.removeEventListener("resize", resize);
-      window.removeEventListener("resize", syncColors);
       idleReset?.kill();
       recoveryTween?.kill();
       gsap.killTweensOf(bend);
@@ -114,16 +95,7 @@ export default function VelocityDivider() {
 
   return (
     <div className="team-transition" ref={teamRef} aria-hidden="true">
-      <svg
-        ref={svgRef}
-        className="team-transition-divider"
-        viewBox="0 -140 100 140"
-        preserveAspectRatio="none"
-        focusable="false"
-      >
-        <path ref={bluePathRef} fill="var(--team-background)" />
-        <path ref={whitePathRef} fill="var(--paper)" />
-      </svg>
+      <canvas className="team-transition-divider" ref={canvasRef} />
     </div>
   );
 }
