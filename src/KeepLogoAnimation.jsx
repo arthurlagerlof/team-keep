@@ -158,6 +158,10 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
       gsap.set(logoRef.current, { perspective: 650 });
       gsap.set(letterOuters, { transformStyle: "preserve-3d", transformOrigin: "50% 50%" });
 
+      const orientationFloatDirections = letterOuters.map(() => {
+        const angle = Math.random() * Math.PI * 2;
+        return { x: Math.cos(angle), y: Math.sin(angle) };
+      });
       const letterAnimations = letterOuters.map((outer, index) => ({
         outer,
         rotateX: gsap.quickTo(outer, "rotationX", { duration: 0.6, ease: "power3.out" }),
@@ -201,7 +205,7 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
           console.log(`Letter tilt controlled by: ${kind}`);
         }
         mode = kind;
-        letterAnimations.forEach(({ outer, rotateX, rotateY, rotateZ, moveX, moveY, shadowX, shadowY, shadowBlur, shadowOpacity }) => {
+        letterAnimations.forEach(({ outer, rotateX, rotateY, rotateZ, moveX, moveY, shadowX, shadowY, shadowBlur, shadowOpacity }, index) => {
           const bounds = outer.getBoundingClientRect();
           const centerX = bounds.left + bounds.width / 2;
           const centerY = bounds.top + bounds.height / 2;
@@ -228,8 +232,13 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
             tiltX = gsap.utils.clamp(-90, 90, (orientationSmoothed.beta / 30) * 90);
             tiltY = gsap.utils.clamp(-90, 90, (orientationSmoothed.gamma / 30) * 90);
             tiltZ = gsap.utils.clamp(-90, 90, (orientationSmoothed.alpha / 30) * 90);
-            strength = Math.min(1, Math.hypot(tiltX, tiltY, tiltZ) / 40);
-            console.log("[orientation] tilt target", { letter: outer.id, smoothedAlpha: orientationSmoothed.alpha, smoothedBeta: orientationSmoothed.beta, smoothedGamma: orientationSmoothed.gamma, rotationX: tiltX, rotationY: tiltY, rotationZ: tiltZ });
+            strength = Math.min(1, Math.hypot(tiltX, tiltY, tiltZ) / 90);
+            const floatDistance = Math.min(32, Math.hypot(tiltX, tiltY, tiltZ) * 0.35);
+            offsetX = orientationFloatDirections[index].x * floatDistance;
+            offsetY = orientationFloatDirections[index].y * floatDistance;
+            moveX.tween.duration(2.2);
+            moveY.tween.duration(2.2);
+            console.log("[orientation] tilt target", { letter: outer.id, smoothedAlpha: orientationSmoothed.alpha, smoothedBeta: orientationSmoothed.beta, smoothedGamma: orientationSmoothed.gamma, rotationX: tiltX, rotationY: tiltY, rotationZ: tiltZ, floatX: offsetX, floatY: offsetY });
             shadowX(`${-tiltY * 1.2}px`);
             shadowY(`${tiltX * 1.2}px`);
           } else {
@@ -239,6 +248,10 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
           rotateX(tiltX);
           rotateY(tiltY);
           rotateZ(tiltZ);
+          if (kind !== "device-orientation") {
+            moveX.tween.duration(0.6);
+            moveY.tween.duration(0.6);
+          }
           moveX(offsetX);
           moveY(offsetY);
           shadowBlur(`${8 + strength * 5}px`);
