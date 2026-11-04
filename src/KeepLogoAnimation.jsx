@@ -7,9 +7,13 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
   useLayoutEffect(() => {
     let onPointerMove;
     let onPointerLeave;
+    let onPointerDown;
+    let onOrientation;
     let interactionArea;
     let interactionTargets = [];
     let ambientTimer;
+    let cursorIdleTimer;
+    let orientationPermissionRequested = false;
     const ctx = gsap.context(() => {
       const q = gsap.utils.selector(logoRef);
 
@@ -180,29 +184,53 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
         }),
       }));
       const maxTilt = 15;
+      const isMobile = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
       let animationComplete = false;
       let pointerActive = false;
       let lastPointerPosition = null;
+      let orientationValue = null;
+      let orientationSmoothed = { beta: 0, gamma: 0 };
+      let mode = "neutral";
       interactionArea = logoRef.current.closest(".intro-section") || logoRef.current;
 
-      const applyCursorPosition = (clientX, clientY) => {
+      const applyModeTarget = (kind, values) => {
+        mode = kind;
         letterAnimations.forEach(({ outer, rotateX, rotateY, moveX, moveY, shadowX, shadowY, shadowBlur, shadowOpacity }) => {
           const bounds = outer.getBoundingClientRect();
           const centerX = bounds.left + bounds.width / 2;
           const centerY = bounds.top + bounds.height / 2;
-          const dx = clientX - centerX;
-          const dy = clientY - centerY;
-          const cursorX = gsap.utils.clamp(0, 1, (clientX - bounds.left) / bounds.width);
-          const cursorY = gsap.utils.clamp(0, 1, (clientY - bounds.top) / bounds.height);
-          const distance = Math.hypot(dx, dy);
-          const strength = gsap.utils.clamp(0, 1, distance / Math.hypot(window.innerWidth / 2, window.innerHeight / 2));
-
-          rotateX(gsap.utils.interpolate(maxTilt, -maxTilt, cursorY));
-          rotateY(gsap.utils.interpolate(-maxTilt, maxTilt, cursorX));
-          moveX(gsap.utils.clamp(-2, 2, dx / Math.max(bounds.width, 1) * 2));
-          moveY(gsap.utils.clamp(-2, 2, dy / Math.max(bounds.height, 1) * 2));
-          shadowX(distance ? (-dx / distance) * strength * 18 : 0);
-          shadowY(distance ? (-dy / distance) * strength * 18 : 0);
+          let tiltX = 0;
+          let tiltY = 0;
+          let offsetX = 0;
+          let offsetY = 0;
+          let strength = 0;
+          if (kind === "cursor" || kind === "random") {
+            const dx = values.x - centerX;
+            const dy = values.y - centerY;
+            const cursorX = gsap.utils.clamp(0, 1, (values.x - bounds.left) / Math.max(bounds.width, 1));
+            const cursorY = gsap.utils.clamp(0, 1, (values.y - bounds.top) / Math.max(bounds.height, 1));
+            const distance = Math.hypot(dx, dy);
+            strength = gsap.utils.clamp(0, 1, distance / Math.hypot(window.innerWidth / 2, window.innerHeight / 2));
+            tiltX = gsap.utils.interpolate(maxTilt, -maxTilt, cursorY);
+            tiltY = gsap.utils.interpolate(-maxTilt, maxTilt, cursorX);
+            offsetX = gsap.utils.clamp(-2, 2, dx / Math.max(bounds.width, 1) * 2);
+            offsetY = gsap.utils.clamp(-2, 2, dy / Math.max(bounds.height, 1) * 2);
+            shadowX(distance ? (-dx / distance) * strength * 18 : 0);
+            shadowY(distance ? (-dy / distance) * strength * 18 : 0);
+          } else if (kind === "device-orientation") {
+            tiltX = gsap.utils.clamp(-10, 10, (orientationSmoothed.beta / 45) * 10);
+            tiltY = gsap.utils.clamp(-10, 10, (orientationSmoothed.gamma / 45) * 10);
+            strength = Math.min(1, Math.hypot(tiltX, tiltY) / 14);
+            shadowX(-tiltY * 1.2);
+            shadowY(tiltX * 1.2);
+          } else {
+            shadowX(0);
+            shadowY(0);
+          }
+          rotateX(tiltX);
+          rotateY(tiltY);
+          moveX(offsetX);
+          moveY(offsetY);
           shadowBlur(8 + strength * 5);
           shadowOpacity(0.18 + strength * 0.12);
         });
@@ -211,29 +239,80 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
         ambientTimer?.kill();
         ambientTimer = null;
       };
+      const fallbackMode = () => {
+        if (!animationComplete || pointerActive) return;
+        if (isMobile && orientationValue) applyModeTarget("device-orientation");
+        else startAmbient();
+      };
       const startAmbient = () => {
         if (!animationComplete || pointerActive) return;
+        stopAmbient();
+        if (isMobile && orientationValue) {
+          applyModeTarget("device-orientation");
+          stopAmbient();
+          return;
+        }
         const bounds = interactionArea.getBoundingClientRect();
-        applyCursorPosition(
-          bounds.left + Math.random() * bounds.width,
-          bounds.top + Math.random() * bounds.height
-        );
+        applyModeTarget("random", {
+          x: bounds.left + Math.random() * bounds.width,
+          y: bounds.top + Math.random() * bounds.height,
+        });
         ambientTimer = gsap.delayedCall(2, startAmbient);
       };
-
+      onOrientation = (event) => {
+        if (!Number.isFinite(event.beta) || !Number.isFinite(event.gamma)) {
+          orientationValue = null;
+          if (mode === "device-orientation") fallbackMode();
+          return;
+        }
+        const beta = Math.abs(event.beta) < 2 ? 0 : gsap.utils.clamp(-45, 45, event.beta);
+        const gamma = Math.abs(event.gamma) < 2 ? 0 : gsap.utils.clamp(-45, 45, event.gamma);
+        orientationSmoothed.beta += (beta - orientationSmoothed.beta) * 0.15;
+        orientationSmoothed.gamma += (gamma - orientationSmoothed.gamma) * 0.15;
+        orientationValue = { beta, gamma };
+        if (animationComplete && !pointerActive) {
+          stopAmbient();
+          applyModeTarget("device-orientation");
+        }
+      };
+      const enableOrientation = async () => {
+        if (!isMobile || orientationPermissionRequested) return;
+        orientationPermissionRequested = true;
+        if (typeof DeviceOrientationEvent === "undefined") return;
+        if (typeof DeviceOrientationEvent.requestPermission === "function") {
+          try {
+            if (await DeviceOrientationEvent.requestPermission() !== "granted") return;
+          } catch {
+            return;
+          }
+        }
+        window.addEventListener("deviceorientation", onOrientation);
+      };
+      onPointerDown = (event) => {
+        if (event.pointerType === "touch") enableOrientation();
+      };
       onPointerMove = (event) => {
         if (event.pointerType === "touch") return;
         lastPointerPosition = { x: event.clientX, y: event.clientY };
         pointerActive = true;
+        cursorIdleTimer?.kill();
         stopAmbient();
-        if (animationComplete) applyCursorPosition(event.clientX, event.clientY);
+        if (animationComplete) {
+          applyModeTarget("cursor", lastPointerPosition);
+          cursorIdleTimer = gsap.delayedCall(3, onCursorIdle);
+        }
       };
       onPointerLeave = (event) => {
         if (event.pointerType === "touch") return;
         pointerActive = false;
-        if (animationComplete) startAmbient();
+        cursorIdleTimer?.kill();
+        if (animationComplete) fallbackMode();
       };
-
+      const onCursorIdle = () => {
+        pointerActive = false;
+        fallbackMode();
+      };
+      interactionArea.addEventListener("pointerdown", onPointerDown);
       interactionArea.addEventListener("pointermove", onPointerMove);
       interactionArea.addEventListener("pointerleave", onPointerLeave);
       const tl = gsap.timeline({
@@ -244,9 +323,9 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
           animationComplete = true;
           onAnimationComplete?.();
           if (pointerActive && lastPointerPosition) {
-            applyCursorPosition(lastPointerPosition.x, lastPointerPosition.y);
+            applyModeTarget("cursor", lastPointerPosition);
           } else {
-            startAmbient();
+            fallbackMode();
           }
         },
       });
@@ -590,8 +669,11 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
     }, logoRef);
 
     return () => {
+      interactionArea?.removeEventListener("pointerdown", onPointerDown);
       interactionArea?.removeEventListener("pointermove", onPointerMove);
       interactionArea?.removeEventListener("pointerleave", onPointerLeave);
+      window.removeEventListener("deviceorientation", onOrientation);
+      cursorIdleTimer?.kill();
       ambientTimer?.kill();
       gsap.killTweensOf(interactionTargets);
       ctx.revert();
