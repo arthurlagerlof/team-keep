@@ -22,10 +22,17 @@ export default function VelocityDivider() {
 
     const whitePath = whitePathRef.current;
     const bluePath = bluePathRef.current;
-    const team = teamRef.current.parentElement;
+    const team = teamRef.current.closest(".team-section");
+    const intro = document.querySelector(".intro-section");
     const bend = bendRef.current;
     let idleReset;
     let recoveryTween;
+
+    const syncColors = () => {
+      if (!intro || !team) return;
+      whitePath.style.fill = getComputedStyle(intro).backgroundColor;
+      bluePath.style.fill = getComputedStyle(team).backgroundColor;
+    };
 
     const renderPath = () => {
       const width = widthRef.current;
@@ -75,10 +82,29 @@ export default function VelocityDivider() {
     });
 
     resize();
+    syncColors();
+    const mountedColorSync = requestAnimationFrame(syncColors);
     window.addEventListener("resize", resize);
+    window.addEventListener("resize", syncColors);
+
+    const colorObserver = new MutationObserver(syncColors);
+    const observeColorChanges = (element) => {
+      colorObserver.observe(element, { attributes: true, attributeFilter: ["class", "style"] });
+    };
+    observeColorChanges(intro);
+    observeColorChanges(team);
+    observeColorChanges(document.documentElement);
+    observeColorChanges(document.body);
+
+    const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
+    colorScheme.addEventListener("change", syncColors);
 
     return () => {
+      cancelAnimationFrame(mountedColorSync);
+      colorObserver.disconnect();
+      colorScheme.removeEventListener("change", syncColors);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("resize", syncColors);
       idleReset?.kill();
       recoveryTween?.kill();
       gsap.killTweensOf(bend);

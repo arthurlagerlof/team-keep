@@ -51,6 +51,12 @@ a:focus-visible {
   overflow: clip;
 }
 
+.intro-section,
+.team-section,
+.team-transition-divider {
+  color-scheme: only light;
+}
+
 .intro-section {
   display: grid;
   min-height: 100svh;
