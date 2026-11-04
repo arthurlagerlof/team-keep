@@ -95,8 +95,8 @@ export default function VelocityDivider() {
         preserveAspectRatio="none"
         focusable="false"
       >
-        <path ref={bluePathRef} fill="#156082" />
-        <path ref={whitePathRef} fill="#fff" />
+        <path ref={bluePathRef} fill="var(--team-background)" />
+        <path ref={whitePathRef} fill="var(--paper)" />
       </svg>
     </div>
   );
