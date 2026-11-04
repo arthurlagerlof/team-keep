@@ -12,7 +12,6 @@
   --deep-navy: #0b3041;
   --orange: #f47b35;
   --paper: #ffffff;
-  --team-background: #156082;
   --line: #d7e0e2;
 }
 
@@ -182,7 +181,7 @@ a:focus-visible {
 .team-section {
   position: relative;
   padding: 48px 6.25vw 52px;
-  background: var(--team-background);
+  background: transparent;
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
@@ -190,15 +189,24 @@ a:focus-visible {
 .team-transition {
   position: absolute;
   z-index: 0;
-  top: -140px;
-  right: 0;
-  left: 0;
-  height: 280px;
+  inset: 0;
   overflow: visible;
   pointer-events: none;
 }
 
+.team-section-background {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
 .team-transition-divider {
+  position: absolute;
+  top: -140px;
+  left: 0;
   display: block;
   width: 100%;
   height: 280px;
