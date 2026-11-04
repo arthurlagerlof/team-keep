@@ -166,17 +166,14 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
         shadowX: gsap.quickTo(letterInners[index], "--shadow-x", {
           duration: 0.6,
           ease: "power3.out",
-          unit: "px",
         }),
         shadowY: gsap.quickTo(letterInners[index], "--shadow-y", {
           duration: 0.6,
           ease: "power3.out",
-          unit: "px",
         }),
         shadowBlur: gsap.quickTo(letterInners[index], "--shadow-blur", {
           duration: 0.6,
           ease: "power3.out",
-          unit: "px",
         }),
         shadowOpacity: gsap.quickTo(letterInners[index], "--shadow-opacity", {
           duration: 0.6,
@@ -185,6 +182,9 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
       }));
       const maxTilt = 15;
       const isMobile = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const canUseOrientation = isMobile && !isIOS;
       let animationComplete = false;
       let pointerActive = false;
       let lastPointerPosition = null;
@@ -194,6 +194,9 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
       interactionArea = logoRef.current.closest(".intro-section") || logoRef.current;
 
       const applyModeTarget = (kind, values) => {
+        if (mode !== kind) {
+          console.log(`Letter tilt controlled by: ${kind}`);
+        }
         mode = kind;
         letterAnimations.forEach(({ outer, rotateX, rotateY, moveX, moveY, shadowX, shadowY, shadowBlur, shadowOpacity }) => {
           const bounds = outer.getBoundingClientRect();
@@ -215,23 +218,24 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
             tiltY = gsap.utils.interpolate(-maxTilt, maxTilt, cursorX);
             offsetX = gsap.utils.clamp(-2, 2, dx / Math.max(bounds.width, 1) * 2);
             offsetY = gsap.utils.clamp(-2, 2, dy / Math.max(bounds.height, 1) * 2);
-            shadowX(distance ? (-dx / distance) * strength * 18 : 0);
-            shadowY(distance ? (-dy / distance) * strength * 18 : 0);
+            shadowX(`${distance ? (-dx / distance) * strength * 18 : 0}px`);
+            shadowY(`${distance ? (-dy / distance) * strength * 18 : 0}px`);
           } else if (kind === "device-orientation") {
-            tiltX = gsap.utils.clamp(-10, 10, (orientationSmoothed.beta / 45) * 10);
-            tiltY = gsap.utils.clamp(-10, 10, (orientationSmoothed.gamma / 45) * 10);
+            tiltX = gsap.utils.clamp(-20, 20, (orientationSmoothed.beta / 30) * 20);
+            tiltY = gsap.utils.clamp(-20, 20, (orientationSmoothed.gamma / 30) * 20);
             strength = Math.min(1, Math.hypot(tiltX, tiltY) / 14);
-            shadowX(-tiltY * 1.2);
-            shadowY(tiltX * 1.2);
+            console.log("[orientation] tilt target", { letter: outer.id, smoothedBeta: orientationSmoothed.beta, smoothedGamma: orientationSmoothed.gamma, rotationX: tiltX, rotationY: tiltY });
+            shadowX(`${-tiltY * 1.2}px`);
+            shadowY(`${tiltX * 1.2}px`);
           } else {
-            shadowX(0);
-            shadowY(0);
+            shadowX("0px");
+            shadowY("0px");
           }
           rotateX(tiltX);
           rotateY(tiltY);
           moveX(offsetX);
           moveY(offsetY);
-          shadowBlur(8 + strength * 5);
+          shadowBlur(`${8 + strength * 5}px`);
           shadowOpacity(0.18 + strength * 0.12);
         });
       };
@@ -241,13 +245,13 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
       };
       const fallbackMode = () => {
         if (!animationComplete || pointerActive) return;
-        if (isMobile && orientationValue) applyModeTarget("device-orientation");
+        if (canUseOrientation && orientationValue) applyModeTarget("device-orientation");
         else startAmbient();
       };
       const startAmbient = () => {
         if (!animationComplete || pointerActive) return;
         stopAmbient();
-        if (isMobile && orientationValue) {
+        if (canUseOrientation && orientationValue) {
           applyModeTarget("device-orientation");
           stopAmbient();
           return;
@@ -260,33 +264,52 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
         ambientTimer = gsap.delayedCall(2, startAmbient);
       };
       onOrientation = (event) => {
+        console.log("[orientation] event received", { alpha: event.alpha, beta: event.beta, gamma: event.gamma, animationComplete, pointerActive });
         if (!Number.isFinite(event.beta) || !Number.isFinite(event.gamma)) {
+          console.warn("[orientation] invalid beta/gamma; using fallback", { beta: event.beta, gamma: event.gamma });
           orientationValue = null;
           if (mode === "device-orientation") fallbackMode();
           return;
         }
-        const beta = Math.abs(event.beta) < 2 ? 0 : gsap.utils.clamp(-45, 45, event.beta);
-        const gamma = Math.abs(event.gamma) < 2 ? 0 : gsap.utils.clamp(-45, 45, event.gamma);
-        orientationSmoothed.beta += (beta - orientationSmoothed.beta) * 0.15;
-        orientationSmoothed.gamma += (gamma - orientationSmoothed.gamma) * 0.15;
+        const betaOffset = event.beta - 90;
+        const beta = Math.abs(betaOffset) < 0.5 ? 0 : gsap.utils.clamp(-30, 30, betaOffset);
+        const gamma = Math.abs(event.gamma) < 0.5 ? 0 : gsap.utils.clamp(-30, 30, event.gamma);
+        orientationSmoothed.beta += (beta - orientationSmoothed.beta) * 0.5;
+        orientationSmoothed.gamma += (gamma - orientationSmoothed.gamma) * 0.5;
         orientationValue = { beta, gamma };
+        console.log("[orientation] normalized and smoothed", { betaOffset, beta, gamma, smoothedBeta: orientationSmoothed.beta, smoothedGamma: orientationSmoothed.gamma });
         if (animationComplete && !pointerActive) {
+          console.log("[orientation] applying orientation mode");
           stopAmbient();
           applyModeTarget("device-orientation");
+        } else {
+          console.log("[orientation] tilt not applied", { animationComplete, pointerActive });
         }
       };
       const enableOrientation = async () => {
-        if (!isMobile || orientationPermissionRequested) return;
+        if (isIOS) {
+          console.log("[orientation] disabled on iOS; using random-point fallback");
+          return;
+        }
+        console.log("[orientation] permission setup requested", { isMobile, alreadyRequested: orientationPermissionRequested, secureContext: window.isSecureContext });
+        if (!canUseOrientation || orientationPermissionRequested) return;
         orientationPermissionRequested = true;
-        if (typeof DeviceOrientationEvent === "undefined") return;
+        if (typeof DeviceOrientationEvent === "undefined") {
+          console.warn("[orientation] DeviceOrientationEvent API unavailable");
+          return;
+        }
         if (typeof DeviceOrientationEvent.requestPermission === "function") {
           try {
-            if (await DeviceOrientationEvent.requestPermission() !== "granted") return;
-          } catch {
+            const permission = await DeviceOrientationEvent.requestPermission();
+            console.log("[orientation] permission result", permission);
+            if (permission !== "granted") return;
+          } catch (error) {
+            console.error("[orientation] permission request failed", error);
             return;
           }
         }
         window.addEventListener("deviceorientation", onOrientation);
+        console.log("[orientation] deviceorientation listener registered");
       };
       onPointerDown = (event) => {
         if (event.pointerType === "touch") enableOrientation();
