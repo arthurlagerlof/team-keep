@@ -14,6 +14,7 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
     let ambientTimer;
     let cursorIdleTimer;
     let orientationRecalibrationTimer;
+    let orientationReturnTimer;
     let orientationPermissionRequested = false;
     const ctx = gsap.context(() => {
       const q = gsap.utils.selector(logoRef);
@@ -196,6 +197,7 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
       let lastPointerPosition = null;
       let orientationValue = null;
       let orientationBaseline = null;
+      let orientationFloatEnabled = false;
       let orientationSmoothed = { alpha: 0, beta: 0, gamma: 0 };
       let mode = "neutral";
       interactionArea = logoRef.current.closest(".intro-section") || logoRef.current;
@@ -229,11 +231,13 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
             shadowX(`${distance ? (-dx / distance) * strength * 18 : 0}px`);
             shadowY(`${distance ? (-dy / distance) * strength * 18 : 0}px`);
           } else if (kind === "device-orientation") {
-            tiltX = gsap.utils.clamp(-90, 90, (orientationSmoothed.beta / 30) * 90);
-            tiltY = gsap.utils.clamp(-90, 90, (orientationSmoothed.gamma / 30) * 90);
-            tiltZ = gsap.utils.clamp(-90, 90, (orientationSmoothed.alpha / 30) * 90);
+            tiltX = gsap.utils.clamp(-45, 45, (orientationSmoothed.beta / 30) * 45);
+            tiltY = gsap.utils.clamp(-45, 45, (orientationSmoothed.gamma / 30) * 45);
+            tiltZ = gsap.utils.clamp(-45, 45, (orientationSmoothed.alpha / 30) * 45);
             strength = Math.min(1, Math.hypot(tiltX, tiltY, tiltZ) / 90);
-            const floatDistance = Math.min(32, Math.hypot(tiltX, tiltY, tiltZ) * 0.35);
+            const floatDistance = orientationFloatEnabled
+              ? Math.min(32, Math.hypot(tiltX, tiltY, tiltZ) * 0.35)
+              : 0;
             offsetX = orientationFloatDirections[index].x * floatDistance;
             offsetY = orientationFloatDirections[index].y * floatDistance;
             moveX.tween.duration(2.2);
@@ -294,6 +298,7 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
         if (!orientationBaseline) {
           orientationBaseline = { ...orientationValue };
           orientationSmoothed = { alpha: 0, beta: 0, gamma: 0 };
+          orientationFloatEnabled = true;
           console.log("[orientation] neutral baseline initialized", orientationBaseline);
         }
         const angleDelta = (value, baseline) => ((value - baseline + 540) % 360) - 180;
@@ -338,7 +343,14 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
         orientationRecalibrationTimer = window.setInterval(() => {
           if (!orientationValue) return;
           orientationBaseline = { ...orientationValue };
-          console.log("[orientation] neutral baseline recalibrated", orientationBaseline);
+          orientationFloatEnabled = false;
+          if (mode === "device-orientation") applyModeTarget("device-orientation");
+          orientationReturnTimer?.kill();
+          orientationReturnTimer = gsap.delayedCall(2.3, () => {
+            orientationFloatEnabled = true;
+            console.log("[orientation] float re-enabled after return");
+          });
+          console.log("[orientation] neutral baseline recalibrated; waiting for letters to return", orientationBaseline);
         }, 5000);
         console.log("[orientation] listener registered; baseline recalibrates every 5 seconds");
       };
@@ -728,6 +740,7 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
       interactionArea?.removeEventListener("pointerleave", onPointerLeave);
       window.removeEventListener("deviceorientation", onOrientation);
       window.clearInterval(orientationRecalibrationTimer);
+      orientationReturnTimer?.kill();
       cursorIdleTimer?.kill();
       ambientTimer?.kill();
       gsap.killTweensOf(interactionTargets);
