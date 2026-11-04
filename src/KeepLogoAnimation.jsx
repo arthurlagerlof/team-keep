@@ -149,13 +149,33 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
         (selector) => q(selector)[0]
       );
       const letterInners = letterOuters.map((outer) => outer.querySelector(".letter-inner"));
+      const animationShadowOpacity = 0.16;
+      const restingShadowOpacity = 0.34;
+      const shadowValues = letterInners.map(() => ({
+        x: 0,
+        y: 7,
+        blur: 8,
+        opacity: animationShadowOpacity,
+      }));
       interactionTargets = [...letterOuters, ...letterInners];
-      gsap.set(letterInners, {
-        "--shadow-x": "0px",
-        "--shadow-y": "7px",
-        "--shadow-blur": "8px",
-        "--shadow-opacity": 0.2,
+      letterInners.forEach((inner, index) => {
+        const shadow = shadowValues[index];
+        inner.style.setProperty("--shadow-x", `${shadow.x}px`);
+        inner.style.setProperty("--shadow-y", `${shadow.y}px`);
+        inner.style.setProperty("--shadow-blur", `${shadow.blur}px`);
+        inner.style.setProperty("--shadow-opacity", shadow.opacity);
       });
+      console.log("[letter shadows] initialized", letterInners.map((inner, index) => {
+        const computedStyle = window.getComputedStyle(inner);
+        return {
+          letter: letterOuters[index].id,
+          x: computedStyle.getPropertyValue("--shadow-x").trim(),
+          y: computedStyle.getPropertyValue("--shadow-y").trim(),
+          blur: computedStyle.getPropertyValue("--shadow-blur").trim(),
+          opacity: computedStyle.getPropertyValue("--shadow-opacity").trim(),
+          filter: computedStyle.filter,
+        };
+      }));
       gsap.set(logoRef.current, { perspective: 650 });
       gsap.set(letterOuters, { transformStyle: "preserve-3d", transformOrigin: "50% 50%" });
 
@@ -163,30 +183,44 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
         const angle = Math.random() * Math.PI * 2;
         return { x: Math.cos(angle), y: Math.sin(angle) };
       });
-      const letterAnimations = letterOuters.map((outer, index) => ({
-        outer,
-        rotateX: gsap.quickTo(outer, "rotationX", { duration: 0.6, ease: "power3.out" }),
-        rotateY: gsap.quickTo(outer, "rotationY", { duration: 0.6, ease: "power3.out" }),
-        rotateZ: gsap.quickTo(outer, "rotation", { duration: 0.6, ease: "power3.out" }),
-        moveX: gsap.quickTo(letterInners[index], "x", { duration: 0.6, ease: "power3.out" }),
-        moveY: gsap.quickTo(letterInners[index], "y", { duration: 0.6, ease: "power3.out" }),
-        shadowX: gsap.quickTo(letterInners[index], "--shadow-x", {
-          duration: 0.6,
-          ease: "power3.out",
-        }),
-        shadowY: gsap.quickTo(letterInners[index], "--shadow-y", {
-          duration: 0.6,
-          ease: "power3.out",
-        }),
-        shadowBlur: gsap.quickTo(letterInners[index], "--shadow-blur", {
-          duration: 0.6,
-          ease: "power3.out",
-        }),
-        shadowOpacity: gsap.quickTo(letterInners[index], "--shadow-opacity", {
-          duration: 0.6,
-          ease: "power3.out",
-        }),
-      }));
+      const letterAnimations = letterOuters.map((outer, index) => {
+        const inner = letterInners[index];
+        const shadow = shadowValues[index];
+        const updateShadow = () => {
+          inner.style.setProperty("--shadow-x", `${shadow.x}px`);
+          inner.style.setProperty("--shadow-y", `${shadow.y}px`);
+          inner.style.setProperty("--shadow-blur", `${shadow.blur}px`);
+          inner.style.setProperty("--shadow-opacity", shadow.opacity);
+        };
+        return {
+          outer,
+          rotateX: gsap.quickTo(outer, "rotationX", { duration: 0.6, ease: "power3.out" }),
+          rotateY: gsap.quickTo(outer, "rotationY", { duration: 0.6, ease: "power3.out" }),
+          rotateZ: gsap.quickTo(outer, "rotation", { duration: 0.6, ease: "power3.out" }),
+          moveX: gsap.quickTo(inner, "x", { duration: 0.6, ease: "power3.out" }),
+          moveY: gsap.quickTo(inner, "y", { duration: 0.6, ease: "power3.out" }),
+          shadowX: gsap.quickTo(shadow, "x", {
+            duration: 0.6,
+            ease: "power3.out",
+            onUpdate: updateShadow,
+          }),
+          shadowY: gsap.quickTo(shadow, "y", {
+            duration: 0.6,
+            ease: "power3.out",
+            onUpdate: updateShadow,
+          }),
+          shadowBlur: gsap.quickTo(shadow, "blur", {
+            duration: 0.6,
+            ease: "power3.out",
+            onUpdate: updateShadow,
+          }),
+          shadowOpacity: gsap.quickTo(shadow, "opacity", {
+            duration: 0.6,
+            ease: "power3.out",
+            onUpdate: updateShadow,
+          }),
+        };
+      });
       const maxTilt = 15;
       const isMobile = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -200,13 +234,12 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
       let orientationFloatEnabled = false;
       let orientationSmoothed = { alpha: 0, beta: 0, gamma: 0 };
       let mode = "neutral";
+      let lastShadowLogTime = -Infinity;
       interactionArea = logoRef.current.closest(".intro-section") || logoRef.current;
 
       const applyModeTarget = (kind, values) => {
-        if (mode !== kind) {
-          console.log(`Letter tilt controlled by: ${kind}`);
-        }
         mode = kind;
+        const shadowSnapshots = [];
         letterAnimations.forEach(({ outer, rotateX, rotateY, rotateZ, moveX, moveY, shadowX, shadowY, shadowBlur, shadowOpacity }, index) => {
           const bounds = outer.getBoundingClientRect();
           const centerX = bounds.left + bounds.width / 2;
@@ -228,8 +261,6 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
             tiltY = gsap.utils.interpolate(-maxTilt, maxTilt, cursorX);
             offsetX = gsap.utils.clamp(-2, 2, dx / Math.max(bounds.width, 1) * 2);
             offsetY = gsap.utils.clamp(-2, 2, dy / Math.max(bounds.height, 1) * 2);
-            shadowX(`${distance ? (-dx / distance) * strength * 18 : 0}px`);
-            shadowY(`${distance ? (-dy / distance) * strength * 18 : 0}px`);
           } else if (kind === "device-orientation") {
             tiltX = gsap.utils.clamp(-45, 45, (orientationSmoothed.beta / 30) * 45);
             tiltY = gsap.utils.clamp(-45, 45, (orientationSmoothed.gamma / 30) * 45);
@@ -242,13 +273,13 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
             offsetY = orientationFloatDirections[index].y * floatDistance;
             moveX.tween.duration(2.2);
             moveY.tween.duration(2.2);
-            console.log("[orientation] tilt target", { letter: outer.id, smoothedAlpha: orientationSmoothed.alpha, smoothedBeta: orientationSmoothed.beta, smoothedGamma: orientationSmoothed.gamma, rotationX: tiltX, rotationY: tiltY, rotationZ: tiltZ, floatX: offsetX, floatY: offsetY });
-            shadowX(`${-tiltY * 1.2}px`);
-            shadowY(`${tiltX * 1.2}px`);
-          } else {
-            shadowX("0px");
-            shadowY("0px");
           }
+          const shadowOffsetX = gsap.utils.clamp(-20, 20, -tiltY * 0.6);
+          const shadowOffsetY = gsap.utils.clamp(-20, 20, 7 - tiltX * 0.6);
+          const shadowBlurValue = 8 + strength * 5;
+          const shadowOpacityValue = restingShadowOpacity + strength * 0.08;
+          shadowX(shadowOffsetX);
+          shadowY(shadowOffsetY);
           rotateX(tiltX);
           rotateY(tiltY);
           rotateZ(tiltZ);
@@ -258,9 +289,35 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
           }
           moveX(offsetX);
           moveY(offsetY);
-          shadowBlur(`${8 + strength * 5}px`);
-          shadowOpacity(0.18 + strength * 0.12);
+          shadowBlur(shadowBlurValue);
+          shadowOpacity(shadowOpacityValue);
+
+          const computedStyle = window.getComputedStyle(letterInners[index]);
+          shadowSnapshots.push({
+            letter: outer.id,
+            mode: kind,
+            tiltX,
+            tiltY,
+            target: {
+              x: `${shadowOffsetX}px`,
+              y: `${shadowOffsetY}px`,
+              blur: `${shadowBlurValue}px`,
+              opacity: shadowOpacityValue,
+            },
+            rendered: {
+              x: computedStyle.getPropertyValue("--shadow-x").trim(),
+              y: computedStyle.getPropertyValue("--shadow-y").trim(),
+              blur: computedStyle.getPropertyValue("--shadow-blur").trim(),
+              opacity: computedStyle.getPropertyValue("--shadow-opacity").trim(),
+              filter: computedStyle.filter,
+            },
+          });
         });
+        const now = performance.now();
+        if (now - lastShadowLogTime >= 1000) {
+          lastShadowLogTime = now;
+          console.log("[letter shadows]", shadowSnapshots);
+        }
       };
       const stopAmbient = () => {
         ambientTimer?.kill();
@@ -287,7 +344,6 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
         ambientTimer = gsap.delayedCall(2, startAmbient);
       };
       onOrientation = (event) => {
-        console.log("[orientation] event received", { alpha: event.alpha, beta: event.beta, gamma: event.gamma, animationComplete, pointerActive });
         if (![event.alpha, event.beta, event.gamma].every(Number.isFinite)) {
           console.warn("[orientation] invalid reading; using fallback", { alpha: event.alpha, beta: event.beta, gamma: event.gamma });
           orientationValue = null;
@@ -299,7 +355,6 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
           orientationBaseline = { ...orientationValue };
           orientationSmoothed = { alpha: 0, beta: 0, gamma: 0 };
           orientationFloatEnabled = true;
-          console.log("[orientation] neutral baseline initialized", orientationBaseline);
         }
         const angleDelta = (value, baseline) => ((value - baseline + 540) % 360) - 180;
         const alpha = gsap.utils.clamp(-30, 30, angleDelta(event.alpha, orientationBaseline.alpha));
@@ -308,21 +363,13 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
         orientationSmoothed.alpha += (alpha - orientationSmoothed.alpha) * 0.5;
         orientationSmoothed.beta += (beta - orientationSmoothed.beta) * 0.5;
         orientationSmoothed.gamma += (gamma - orientationSmoothed.gamma) * 0.5;
-        console.log("[orientation] relative and smoothed", { alpha, beta, gamma, smoothed: { ...orientationSmoothed } });
         if (animationComplete && !pointerActive) {
-          console.log("[orientation] applying orientation mode");
           stopAmbient();
           applyModeTarget("device-orientation");
-        } else {
-          console.log("[orientation] tilt not applied", { animationComplete, pointerActive });
         }
       };
       const enableOrientation = async () => {
-        if (isIOS) {
-          console.log("[orientation] disabled on iOS; using random-point fallback");
-          return;
-        }
-        console.log("[orientation] permission setup requested", { isMobile, alreadyRequested: orientationPermissionRequested, secureContext: window.isSecureContext });
+        if (isIOS) return;
         if (!canUseOrientation || orientationPermissionRequested) return;
         orientationPermissionRequested = true;
         if (typeof DeviceOrientationEvent === "undefined") {
@@ -332,7 +379,6 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
         if (typeof DeviceOrientationEvent.requestPermission === "function") {
           try {
             const permission = await DeviceOrientationEvent.requestPermission();
-            console.log("[orientation] permission result", permission);
             if (permission !== "granted") return;
           } catch (error) {
             console.error("[orientation] permission request failed", error);
@@ -348,11 +394,8 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
           orientationReturnTimer?.kill();
           orientationReturnTimer = gsap.delayedCall(2.3, () => {
             orientationFloatEnabled = true;
-            console.log("[orientation] float re-enabled after return");
           });
-          console.log("[orientation] neutral baseline recalibrated; waiting for letters to return", orientationBaseline);
         }, 5000);
-        console.log("[orientation] listener registered; baseline recalibrates every 5 seconds");
       };
       onPointerDown = (event) => {
         if (event.pointerType === "touch") enableOrientation();

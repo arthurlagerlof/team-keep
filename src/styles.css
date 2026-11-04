@@ -178,8 +178,10 @@ a:focus-visible {
 .letter-inner {
   width: 100%;
   height: 100%;
+  overflow: visible;
   transform-style: preserve-3d;
-  will-change: transform;
+  filter: drop-shadow(var(--shadow-x, 0px) var(--shadow-y, 7px) var(--shadow-blur, 8px) rgba(4, 30, 42, var(--shadow-opacity, 0.2)));
+  will-change: transform, filter;
 }
 
 .letter-inner svg {
@@ -187,8 +189,6 @@ a:focus-visible {
   width: 100%;
   height: 100%;
   overflow: visible;
-  filter: drop-shadow(var(--shadow-x, 0px) var(--shadow-y, 7px) var(--shadow-blur, 8px) rgba(4, 30, 42, var(--shadow-opacity, 0.2)));
-  will-change: filter;
 }
 
 .team-section {
