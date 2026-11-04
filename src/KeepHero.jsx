@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import KeepBackgroundOverlay from "./KeepBackgroundOverlay";
 import KeepLogoAnimation from "./KeepLogoAnimation";
@@ -7,6 +7,11 @@ export default function KeepHero() {
   const [showOverlay, setShowOverlay] = useState(true);
   const [ctaReady, setCtaReady] = useState(false);
   const buttonRef = useRef(null);
+
+  useEffect(() => {
+    const fallback = window.setTimeout(() => setCtaReady(true), 4000);
+    return () => window.clearTimeout(fallback);
+  }, []);
 
   useLayoutEffect(() => {
     const button = buttonRef.current;
