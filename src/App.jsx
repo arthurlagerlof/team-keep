@@ -8,7 +8,7 @@ const members = [
     name: "Özge Şahin",
     image: "/images/ozge_sahin.jpeg",
     description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur a tellus at justo pharetra posuere.",
+      "Student at LUT University",
     linkedin: "https://www.linkedin.com/in/ozgesahin05/",
     phone: "+90 541 710 84 17",
     email: "Ozge.Sahin@student.lut.fi",
@@ -17,7 +17,7 @@ const members = [
     name: "Wisdom Ibeh",
     image: "/images/wisdom_ibeh.jpeg",
     description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer quis velit vitae erat tincidunt.",
+      "AI/ML Engineer building the systems that make models useful | AI agents, RAG, context & tool use",
     linkedin: "https://www.linkedin.com/in/wisdomibeh/",
     phone: "+234 814 072 6096",
     email: "wisdomekene2000@gmail.com",
@@ -26,7 +26,7 @@ const members = [
     name: "Arthur Lagerlöf",
     image: "/images/arthur_lagerlof.jpeg",
     description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris at neque vel nisl commodo vulputate.",
+      "Founder of ZoneTask (zonetask.app) | Web Application Developer | Based in Turku, Finland",
     linkedin: "https://www.linkedin.com/in/arthur-lagerl%C3%B6f-85031927b/",
     phone: "+358406347109",
     email: "arthur.lagerlof@abo.fi",
@@ -35,7 +35,7 @@ const members = [
     name: "Faithful Godwin",
     image: "/images/faithful.godwin.jpeg",
     description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae augue sed nulla efficitur laoreet.",
+      "Founder | Bio Spark Fellow at Cambridge Gravity | First Nigerian Council Member at Workforce 2035 | Mobile App Developer | Driving Innovation and Collaboration",
     linkedin: "https://www.linkedin.com/in/faithful-godwin/",
     phone: "+234 810 512 4061",
     email: "faithfulgodwin2020@gmail.com",
