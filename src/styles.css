@@ -180,7 +180,7 @@ a:focus-visible {
   height: 100%;
   overflow: visible;
   transform-style: preserve-3d;
-  filter: drop-shadow(var(--shadow-x, 0px) var(--shadow-y, 7px) var(--shadow-blur, 8px) rgba(4, 30, 42, var(--shadow-opacity, 0.2)));
+  filter: drop-shadow(var(--shadow-x, 0px) var(--shadow-y, 7px) var(--shadow-blur, 2px) rgba(4, 30, 42, var(--shadow-opacity, 0.2)));
   will-change: transform, filter;
 }
 

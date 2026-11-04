@@ -12,6 +12,7 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
     let interactionArea;
     let interactionTargets = [];
     let ambientTimer;
+    let ambientPoint = null;
     let cursorIdleTimer;
     let orientationRecalibrationTimer;
     let orientationReturnTimer;
@@ -154,7 +155,7 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
       const shadowValues = letterInners.map(() => ({
         x: 0,
         y: 7,
-        blur: 8,
+        blur: 1.5,
         opacity: animationShadowOpacity,
       }));
       interactionTargets = [...letterOuters, ...letterInners];
@@ -275,8 +276,8 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
             moveY.tween.duration(2.2);
           }
           const shadowOffsetX = gsap.utils.clamp(-20, 20, -tiltY * 0.6);
-          const shadowOffsetY = gsap.utils.clamp(-20, 20, 7 - tiltX * 0.6);
-          const shadowBlurValue = 8 + strength * 5;
+          const shadowOffsetY = gsap.utils.clamp(-20, 20, 7 + tiltX * 0.6);
+          const shadowBlurValue = 1.5 + strength * 0.5;
           const shadowOpacityValue = restingShadowOpacity + strength * 0.08;
           shadowX(shadowOffsetX);
           shadowY(shadowOffsetY);
@@ -337,11 +338,18 @@ export default function KeepLogoAnimation({ onAnimationComplete }) {
           return;
         }
         const bounds = interactionArea.getBoundingClientRect();
-        applyModeTarget("random", {
+        ambientPoint ??= {
+          x: bounds.left + bounds.width / 2,
+          y: bounds.top + bounds.height / 2,
+        };
+        ambientTimer = gsap.to(ambientPoint, {
           x: bounds.left + Math.random() * bounds.width,
           y: bounds.top + Math.random() * bounds.height,
+          duration: gsap.utils.random(5, 8),
+          ease: "power1.inOut",
+          onUpdate: () => applyModeTarget("random", ambientPoint),
+          onComplete: startAmbient,
         });
-        ambientTimer = gsap.delayedCall(2, startAmbient);
       };
       onOrientation = (event) => {
         if (![event.alpha, event.beta, event.gamma].every(Number.isFinite)) {
