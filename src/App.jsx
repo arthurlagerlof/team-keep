@@ -48,6 +48,39 @@ const contactItems = [
   { key: "email", label: "Email", icon: "✉" },
 ];
 
+function SectionBackgroundCanvas({ color }) {
+  const canvasRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    const section = canvas.parentElement;
+
+    const resize = () => {
+      const width = section.clientWidth;
+      const height = section.clientHeight;
+      const scale = window.devicePixelRatio || 1;
+      canvas.width = Math.round(width * scale);
+      canvas.height = Math.round(height * scale);
+      context.setTransform(scale, 0, 0, scale, 0, 0);
+      context.fillStyle = color;
+      context.fillRect(0, 0, width, height);
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+    const observer = new ResizeObserver(resize);
+    observer.observe(section);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", resize);
+    };
+  }, [color]);
+
+  return <canvas className="intro-section-background" ref={canvasRef} aria-hidden="true" />;
+}
+
 function ContactButton({ item, value }) {
   const href =
     item.key === "linkedin"
@@ -150,6 +183,7 @@ export default function App() {
       <main>
         <section className="intro-section" id="top" aria-labelledby="hero-title">
           <h1 className="visually-hidden" id="hero-title">Team KEEP</h1>
+          <SectionBackgroundCanvas color="#ffffff" />
           <KeepHero />
         </section>
 
