@@ -8,7 +8,7 @@ const members = [
     name: "Özge Şahin",
     image: "/images/ozge_sahin.jpeg",
     description:
-      "Student at LUT University",
+      "I am a Software Engineering student at LUT University interested in utilising AI tools to improve solutions in creative and intuitive ways. I’m excited to explore ideas and learn together!",
     linkedin: "https://www.linkedin.com/in/ozgesahin05/",
     phone: "+90 541 710 84 17",
     email: "Ozge.Sahin@student.lut.fi",
