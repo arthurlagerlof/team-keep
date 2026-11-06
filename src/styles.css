@@ -60,7 +60,7 @@ a:focus-visible {
   scroll-snap-stop: always;
 }
 
-.intro-section-background {
+.section-background-canvas {
   position: absolute;
   z-index: 0;
   inset: 0;
@@ -114,8 +114,10 @@ a:focus-visible {
 .keep-cta-wrap {
   position: relative;
   z-index: 1;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
   margin-top: clamp(28px, 5vh, 52px);
   perspective: 800px;
 }
@@ -148,6 +150,120 @@ a:focus-visible {
 .keep-cta.is-visible {
   opacity: 1;
   visibility: visible;
+}
+
+.keep-cta-secondary {
+  border: 2px solid var(--deep-navy);
+  background: transparent;
+  color: var(--deep-navy);
+}
+
+.keep-cta-secondary:hover {
+  background: var(--deep-navy);
+  color: var(--paper);
+}
+
+.project-section {
+  position: relative;
+  display: grid;
+  min-height: 68svh;
+  place-items: center;
+  padding: 180px 6.25vw 72px;
+  background: #156082;
+  color: var(--paper);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.project-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(100%, 1120px);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  grid-template-areas:
+    "model title"
+    "model description"
+    "model cta";
+  align-items: center;
+  column-gap: clamp(24px, 5vw, 64px);
+  padding: clamp(28px, 5vw, 64px);
+  border-radius: 8px;
+  background: var(--deep-navy);
+  text-align: left;
+}
+
+.ship-model-wrap {
+  grid-area: model;
+  position: relative;
+  width: 100%;
+  height: clamp(260px, 34vw, 390px);
+}
+
+.ship-model-loading {
+  grid-area: model;
+  width: 100%;
+  height: clamp(260px, 34vw, 390px);
+}
+
+.ship-model {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.ship-model:active {
+  cursor: grabbing;
+}
+
+.ship-model canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ship-model-error {
+  position: absolute;
+  inset: 50% 0 auto;
+  margin: 0;
+  color: var(--paper);
+  text-align: center;
+}
+
+.ship-model-hint {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  color: rgba(255, 255, 255, 0.65);
+  font: 10px Arial, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.project-content h2 {
+  grid-area: title;
+  margin: 0;
+  color: var(--paper);
+  font-size: clamp(32px, 5vw, 58px);
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.project-content p {
+  grid-area: description;
+  max-width: 440px;
+  margin: 20px 0 0;
+  color: rgba(255, 255, 255, 0.84);
+  font-family: Arial, sans-serif;
+  font-size: clamp(14px, 1.5vw, 17px);
+  line-height: 1.7;
+}
+
+.project-content .keep-cta {
+  grid-area: cta;
+  justify-self: start;
+  margin-top: clamp(24px, 4vh, 40px);
 }
 
 .keep-hero-logo {
@@ -194,9 +310,21 @@ a:focus-visible {
 .team-section {
   position: relative;
   padding: 76px 6.25vw 52px;
-  background: transparent;
+  background: #156082;
   scroll-snap-align: start;
   scroll-snap-stop: always;
+}
+
+.project-team-divider {
+  position: absolute;
+  z-index: 2;
+  bottom: 0;
+  left: 50%;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--orange);
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .team-transition {
@@ -480,6 +608,8 @@ a:focus-visible {
   display: flex;
   min-height: 82px;
   align-items: center;
+  scroll-snap-align: end;
+  scroll-snap-stop: normal;
   justify-content: center;
   padding: 22px 6.25vw;
   background: var(--deep-navy);
@@ -573,6 +703,11 @@ a:focus-visible {
 
   .team-section {
     padding: 50px 6vw 34px;
+  }
+
+  .project-section {
+    min-height: 64svh;
+    padding: 160px 6vw 56px;
   }
 
   .team-grid {
@@ -696,6 +831,25 @@ a:focus-visible {
     gap: 4px;
     padding: 0 6px;
     font-size: 8px;
+  }
+}
+
+@media (max-width: 760px) {
+  .project-content {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "model"
+      "title"
+      "description"
+      "cta";
+    row-gap: 0;
+    padding: 24px;
+  }
+
+  .ship-model-wrap,
+  .ship-model-loading {
+    height: clamp(220px, 58vw, 320px);
+    margin-bottom: 12px;
   }
 }
 

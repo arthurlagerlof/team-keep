@@ -1,7 +1,9 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { Suspense, lazy, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import KeepHero from "./KeepHero.jsx";
 import VelocityDivider from "./VelocityDivider.jsx";
+import ProjectTeamDivider from "./ProjectTeamDivider.jsx";
+const ShipModel = lazy(() => import("./ShipModel.jsx"));
 
 const members = [
   {
@@ -67,6 +69,8 @@ const members = [
   },
 ];
 
+const projectBackgroundColor = "#156082";
+
 const contactItems = [
   { key: "linkedin", label: "LinkedIn", icon: "in" },
   { key: "phone", label: "Phone", icon: "☎" },
@@ -103,7 +107,7 @@ function SectionBackgroundCanvas({ color }) {
     };
   }, [color]);
 
-  return <canvas className="intro-section-background" ref={canvasRef} aria-hidden="true" />;
+  return <canvas className="section-background-canvas" ref={canvasRef} aria-hidden="true" />;
 }
 
 function ContactButton({ item, value }) {
@@ -244,8 +248,33 @@ export default function App() {
           <KeepHero />
         </section>
 
-        <section className="team-section" id="team" aria-labelledby="team-title">
-          <VelocityDivider />
+        <section className="project-section" id="project" aria-labelledby="project-title" style={{ backgroundColor: projectBackgroundColor }}>
+          <SectionBackgroundCanvas color={projectBackgroundColor} />
+          <VelocityDivider color={projectBackgroundColor} />
+          <div className="project-content">
+            <Suspense fallback={<div className="ship-model-loading" aria-hidden="true" />}>
+              <ShipModel />
+            </Suspense>
+            <h2 id="project-title">Complee - Since AI project</h2>
+            <p>
+              An AI-assisted engineering tool that connects ship design information with
+              applicable regulations, helping engineers identify potential compliance gaps
+              during the earliest stages of design.
+            </p>
+            <a
+              className="keep-cta is-visible"
+              href="https://complee.netlify.app"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Check out the project
+            </a>
+          </div>
+          <ProjectTeamDivider />
+        </section>
+
+        <section className="team-section" id="team" aria-labelledby="team-title" style={{ backgroundColor: projectBackgroundColor }}>
+          <SectionBackgroundCanvas color={projectBackgroundColor} />
           <h2 className="visually-hidden" id="team-title">Team KEEP members</h2>
           <div className="team-grid">
             <section className="since-ai-group" ref={sinceAiRef} aria-labelledby="since-ai-title">

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+﻿import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -9,8 +9,8 @@ const IDLE_DELAY = 0.12;
 const RESPONSE_DURATION = 0.25;
 const RECOVERY_DURATION = 0.85;
 
-export default function VelocityDivider() {
-  const teamRef = useRef(null);
+export default function VelocityDivider({ color }) {
+  const sectionRef = useRef(null);
   const backgroundCanvasRef = useRef(null);
   const canvasRef = useRef(null);
   const bendRef = useRef({ value: 0 });
@@ -22,7 +22,7 @@ export default function VelocityDivider() {
     const context = canvas.getContext("2d");
     const backgroundCanvas = backgroundCanvasRef.current;
     const backgroundContext = backgroundCanvas.getContext("2d");
-    const team = teamRef.current.closest(".team-section");
+    const section = sectionRef.current.closest(".project-section");
     const bend = bendRef.current;
     let idleReset;
     let recoveryTween;
@@ -41,7 +41,7 @@ export default function VelocityDivider() {
       context.quadraticCurveTo(width / 2, height / 2 + bend.value, 0, height / 2);
       context.closePath();
       context.fill();
-      context.fillStyle = "#156082";
+      context.fillStyle = color;
       context.beginPath();
       context.moveTo(0, height / 2);
       context.quadraticCurveTo(width / 2, height / 2 + bend.value, width, height / 2);
@@ -54,8 +54,8 @@ export default function VelocityDivider() {
     const renderBackground = () => {
       const scale = window.devicePixelRatio || 1;
       backgroundContext.setTransform(scale, 0, 0, scale, 0, 0);
-      backgroundContext.fillStyle = "#156082";
-      backgroundContext.fillRect(0, 0, team.clientWidth, team.clientHeight);
+      backgroundContext.fillStyle = color;
+      backgroundContext.fillRect(0, 0, section.clientWidth, section.clientHeight);
     };
 
     const setBend = gsap.quickTo(bend, "value", {
@@ -68,14 +68,14 @@ export default function VelocityDivider() {
       const scale = window.devicePixelRatio || 1;
       canvas.width = Math.round(canvas.clientWidth * scale);
       canvas.height = Math.round(canvas.clientHeight * scale);
-      backgroundCanvas.width = Math.round(team.clientWidth * scale);
-      backgroundCanvas.height = Math.round(team.clientHeight * scale);
+      backgroundCanvas.width = Math.round(section.clientWidth * scale);
+      backgroundCanvas.height = Math.round(section.clientHeight * scale);
       renderBackground();
       renderCanvas();
     };
 
     const trigger = ScrollTrigger.create({
-      trigger: team,
+      trigger: section,
       start: "top bottom",
       end: "top top",
       onUpdate: (self) => {
@@ -105,7 +105,7 @@ export default function VelocityDivider() {
     resize();
     window.addEventListener("resize", resize);
     const sectionResizeObserver = new ResizeObserver(resize);
-    sectionResizeObserver.observe(team);
+    sectionResizeObserver.observe(section);
 
     return () => {
       sectionResizeObserver.disconnect();
@@ -115,10 +115,10 @@ export default function VelocityDivider() {
       gsap.killTweensOf(bend);
       trigger.kill();
     };
-  }, []);
+  }, [color]);
 
   return (
-    <div className="team-transition" ref={teamRef} aria-hidden="true">
+    <div className="team-transition" ref={sectionRef} aria-hidden="true">
       <canvas className="team-section-background" ref={backgroundCanvasRef} />
       <canvas className="team-transition-divider" ref={canvasRef} />
     </div>

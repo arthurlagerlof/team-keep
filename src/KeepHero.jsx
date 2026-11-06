@@ -76,6 +76,7 @@ export default function KeepHero() {
         </svg>
         <div className="keep-cta-wrap">
           <a ref={buttonRef} className={`keep-cta${ctaReady ? " is-visible" : ""}`} href="#team">Meet the team</a>
+          <a className={`keep-cta keep-cta-secondary${ctaReady ? " is-visible" : ""}`} href="#project">Since AI Meyer Turku challenge</a>
         </div>
       </div>
       {showOverlay && <KeepBackgroundOverlay onComplete={() => setShowOverlay(false)} />}
