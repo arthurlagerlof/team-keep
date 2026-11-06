@@ -6,6 +6,7 @@ import VelocityDivider from "./VelocityDivider.jsx";
 const members = [
   {
     name: "Özge Şahin",
+    sinceAi: true,
     image: "/images/ozge_sahin.jpeg",
     description:
       "I am a Software Engineering student at LUT University interested in utilising AI tools to improve solutions in creative and intuitive ways. I’m excited to explore ideas and learn together!",
@@ -15,6 +16,7 @@ const members = [
   },
   {
     name: "Arthur Lagerlöf",
+    sinceAi: true,
     image: "/images/arthur_lagerlof.jpeg",
     description:
       "Founder of ZoneTask (zonetask.app) | Web Application Developer | Based in Turku, Finland",
@@ -24,6 +26,7 @@ const members = [
   },
   {
     name: "Timo Gültzow",
+    sinceAi: true,
     image: "/images/timo_g.jpeg",
     description:
       "Student at Metropolia UAS | BEng, Information Technology",
@@ -31,6 +34,7 @@ const members = [
   },
   {
     name: "Philipp Thalemann",
+    sinceAi: true,
     image: "/images/philipp_thalemann.jpeg",
     description:
       "Business Information Systems Student @ TU Braunschweig | Erasmus at Umeå University",
@@ -53,6 +57,13 @@ const members = [
     linkedin: "https://www.linkedin.com/in/faithful-godwin/",
     phone: "+234 810 512 4061",
     email: "faithfulgodwin2020@gmail.com",
+  },
+  {
+    name: "Mark Arevada",
+    sinceAi: true,
+    image: "/images/mark_arevada.jpeg",
+    description: "AI Trainer at micro1",
+    linkedin: "https://www.linkedin.com/in/arevadamark/",
   },
 ];
 
@@ -240,12 +251,12 @@ export default function App() {
             <section className="since-ai-group" ref={sinceAiRef} aria-labelledby="since-ai-title">
               <h3 className="since-ai-title" id="since-ai-title">At Since AI</h3>
               <div className="since-ai-grid">
-                {members.slice(0, 4).map((member) => (
+                {members.filter((member) => member.sinceAi).map((member) => (
                   <MemberCard key={member.name} member={member} />
                 ))}
               </div>
             </section>
-            {members.slice(4).map((member) => (
+            {members.filter((member) => !member.sinceAi).map((member) => (
               <MemberCard key={member.name} member={member} />
             ))}
           </div>
