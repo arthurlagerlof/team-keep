@@ -14,15 +14,6 @@ const members = [
     email: "Ozge.Sahin@student.lut.fi",
   },
   {
-    name: "Wisdom Ibeh",
-    image: "/images/wisdom_ibeh.jpeg",
-    description:
-      "AI/ML Engineer building the systems that make models useful | AI agents, RAG, context & tool use",
-    linkedin: "https://www.linkedin.com/in/wisdomibeh/",
-    phone: "+234 814 072 6096",
-    email: "wisdomekene2000@gmail.com",
-  },
-  {
     name: "Arthur Lagerlöf",
     image: "/images/arthur_lagerlof.jpeg",
     description:
@@ -30,6 +21,29 @@ const members = [
     linkedin: "https://www.linkedin.com/in/arthur-lagerl%C3%B6f-85031927b/",
     phone: "+358406347109",
     email: "arthur.lagerlof@abo.fi",
+  },
+  {
+    name: "Timo Gültzow",
+    image: "/images/timo_g.jpeg",
+    description:
+      "Student at Metropolia UAS | BEng, Information Technology",
+    linkedin: "https://www.linkedin.com/in/timo-g/",
+  },
+  {
+    name: "Philipp Thalemann",
+    image: "/images/philipp_thalemann.jpeg",
+    description:
+      "Business Information Systems Student @ TU Braunschweig | Erasmus at Umeå University",
+    linkedin: "https://www.linkedin.com/in/philipp-thalemann/",
+  },
+  {
+    name: "Wisdom Ibeh",
+    image: "/images/wisdom_ibeh.jpeg",
+    description:
+      "AI/ML Engineer building the systems that make models useful | AI agents, RAG, context & tool use",
+    linkedin: "https://www.linkedin.com/in/wisdomibeh/",
+    phone: "+234 814 072 6096",
+    email: "wisdomekene2000@gmail.com",
   },
   {
     name: "Faithful Godwin",
@@ -113,6 +127,7 @@ function ContactButton({ item, value }) {
 function MemberCard({ member }) {
   const [expanded, setExpanded] = useState(false);
   const detailsRef = useRef(null);
+  const hasDetails = Boolean(member.image || member.description);
 
   useLayoutEffect(() => {
     if (!expanded || !detailsRef.current) return;
@@ -140,44 +155,75 @@ function MemberCard({ member }) {
   };
 
   return (
-    <article className={`member-card${expanded ? " is-expanded" : ""}`}>
+    <article
+      className={`member-card${!hasDetails ? " member-card--compact" : ""}${expanded ? " is-expanded" : ""}`}
+    >
       <div className="member-info">
         <div className="member-card-summary">
           <div className="member-heading">
             <h2>{member.name}</h2>
           </div>
           <div className="contact-list" aria-label={`Contact ${member.name}`}>
-            {contactItems.map((item) => (
-              <ContactButton key={item.key} item={item} value={member[item.key]} />
-            ))}
+            {contactItems
+              .filter((item) => member[item.key])
+              .map((item) => (
+                <ContactButton key={item.key} item={item} value={member[item.key]} />
+              ))}
           </div>
-          <button
-            className="member-toggle"
-            type="button"
-            aria-label={`${expanded ? "Collapse" : "Expand"} details for ${member.name}`}
-            aria-expanded={expanded}
-            onClick={toggleDetails}
-          >
-            <span aria-hidden="true" />
-          </button>
+          {hasDetails && (
+            <button
+              className="member-toggle"
+              type="button"
+              aria-label={`${expanded ? "Collapse" : "Expand"} details for ${member.name}`}
+              aria-expanded={expanded}
+              onClick={toggleDetails}
+            >
+              <span aria-hidden="true" />
+            </button>
+          )}
         </div>
-        <div className="member-details" ref={detailsRef}>
-          <div className="member-image-wrap">
-            <img
-              className="member-image"
-              src={member.image}
-              alt={`Portrait of ${member.name}`}
-              loading="lazy"
-            />
+        {hasDetails && (
+          <div className="member-details" ref={detailsRef}>
+            {member.image && (
+              <div className="member-image-wrap">
+                <img
+                  className="member-image"
+                  src={member.image}
+                  alt={`Portrait of ${member.name}`}
+                  loading="lazy"
+                />
+              </div>
+            )}
+            {member.description && <p className="member-description">{member.description}</p>}
           </div>
-          <p className="member-description">{member.description}</p>
-        </div>
+        )}
       </div>
     </article>
   );
 }
 
 export default function App() {
+  const sinceAiRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const context = gsap.context(() => {
+      const timeline = gsap.timeline({ defaults: { ease: "power3.out" } });
+      timeline
+        .fromTo(
+          sinceAiRef.current,
+          { autoAlpha: 0, y: 24, scale: 0.98 },
+          { autoAlpha: 1, y: 0, scale: 1, duration: 0.8 }
+        )
+        .fromTo(
+          ".since-ai-title",
+          { autoAlpha: 0, y: 12, letterSpacing: "0.24em" },
+          { autoAlpha: 1, y: 0, letterSpacing: "0.08em", duration: 0.6 },
+          "-=0.35"
+        );
+    }, sinceAiRef);
+    return () => context.revert();
+  }, []);
+
   return (
     <div className="site-shell">
       <main>
@@ -191,7 +237,15 @@ export default function App() {
           <VelocityDivider />
           <h2 className="visually-hidden" id="team-title">Team KEEP members</h2>
           <div className="team-grid">
-            {members.map((member) => (
+            <section className="since-ai-group" ref={sinceAiRef} aria-labelledby="since-ai-title">
+              <h3 className="since-ai-title" id="since-ai-title">At Since AI</h3>
+              <div className="since-ai-grid">
+                {members.slice(0, 4).map((member) => (
+                  <MemberCard key={member.name} member={member} />
+                ))}
+              </div>
+            </section>
+            {members.slice(4).map((member) => (
               <MemberCard key={member.name} member={member} />
             ))}
           </div>
